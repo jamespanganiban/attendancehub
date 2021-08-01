@@ -1,0 +1,58 @@
+.hide {
+display: none;
+}
+
+#myDIV:hover + .hide {
+display: block;
+color: red;
+}
+.collapsible {
+
+
+cursor: pointer;
+font-weight: bold;
+text-align: center;
+outline: none;
+font-size: 15px;
+}
+
+
+
+.content {
+
+display: none;
+overflow: hidden;
+
+}
+#active
+{
+background-color: black;
+}
+.approvalbutton {
+    display: inline;
+    width: 20px;
+    height: 20px;
+    background: #d82020;
+    padding: 4px;
+    text-align: center;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    line-height: 2px;
+}
+
+#inp1{
+
+	border-style:none; 
+	background: transparent
+}
+#btn1
+{
+	width: 14%;
+	margin: 0 auto;
+	display: inline;
+}
+#txtarea{
+	width: 50%;
+	margin: left 0 auto;
+}

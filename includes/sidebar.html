@@ -1,0 +1,244 @@
+
+    <?php
+    $url = $_SERVER['REQUEST_URI'];
+    $parts = parse_url($url);
+    $page_name = basename($parts['path']);
+
+
+    $requestcount=$conn->prepare("SELECT COUNT(fileid) AS for_approval_count FROM filed WHERE fstatus = :fstat");
+    $requestcount->execute(array(':fstat' => 'for approval'));
+    $row_count_for_approval=$requestcount->fetch(PDO::FETCH_ASSOC);
+
+    ?>
+
+    <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
+
+      <!-- Sidebar - Brand -->
+      <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
+        <!--<div class="sidebar-brand-icon rotate-n-15">
+          
+        </div>-->
+        <div><p style='height: 100%; width: 100%; object-fit: contain'>DTR Support </p></div>
+      </a>
+
+      <!-- Divider -->
+      <hr class="sidebar-divider my-0">
+
+      <!-- Nav Item - Dashboard -->
+      <li class="nav-item <?php  if($page_name=='admin'){echo ' active';}?>" >
+        <a class="nav-link" href="../admin/">
+          <i class="fas fa-fw fa-tachometer-alt"></i>
+          <span>Dashboard</span></a>
+      </li>
+
+      <?php if($row['level'] != "payroll" AND $userdata == 1 OR $userdata == 2 OR $userdata == 12 OR $userdata == 6){?>
+      <li class="nav-item <?php  if($page_name=='requests.php'){echo ' active';}?>">
+        <a class="nav-link" href="../admin/requests.php">
+          <i class="fa fa-paper-plane"></i>
+          <span>All Requests <?php if($row_count_for_approval['for_approval_count'] != 0){ echo 
+            "(".$row_count_for_approval['for_approval_count'].")"; }?></span></a>
+      </li>
+      <?php } ?>
+
+      <?php if($row['level'] != "payroll" AND $userdata != "admin"){?>
+        <li class="nav-item <?php  if($page_name=='cws.php'){echo ' active';}?>">
+        <a class="nav-link" href="cws.php">
+          <i class="fas fa-calendar-o"></i>
+          <span>Change of Work Schedule</span></a>
+      </li>
+      <?php } ?>
+       <?php if($row['level'] != "payroll" AND $userdata != "admin"){?>
+      <li class="nav-item <?php  if($page_name=='fts.php'){echo ' active';}?>">
+        <a class="nav-link" href="../admin/fts.php">
+          <i class="far fa-calendar-plus"></i>
+          <span>Manual Encode (Out)</span></a>
+      </li>
+      <?php } ?>
+
+      
+      <?php if($row['level'] != "payroll" AND $userdata == 1 OR $userdata == 2 OR $userdata == 12 OR $userdata == 17 OR $userdata == 13 OR $userdata == 6){?>
+      <li class="nav-item <?php  if($page_name=='new_access.php'){echo ' active';}?>">
+        <a class="nav-link" href="../admin/new_access.php">
+          <i class="fa fa-plus"></i>
+          <span>Create New Access</span></a>
+      </li>
+      <?php } ?>
+
+
+      <?php if($row['level'] != "payroll" AND $row['level'] != "admin"){?>
+        <li class="nav-item <?php  if($page_name=='filing.php'){echo ' active';}?>">
+        <a class="nav-link" href="filing.php">
+          <i class="far fa-file"></i>
+          <span>Filing</span></a>
+      </li>
+    <?php } ?>
+
+
+      <?php if($row['level'] != "payroll" AND $row['level'] != "admin"){?>
+      <li class="nav-item <?php  if($page_name=='filed.php'){echo ' active';}?>">
+        <a class="nav-link" href="filed.php">
+          <i class="far fa-folder"></i>
+          <span>Filed</span></a>
+      </li>
+          <?php } ?>
+
+
+          <?php if($row['level'] != "payroll" AND $userdata == 1 OR $userdata == 2){?>
+      <li class="nav-item <?php  if($page_name=='announcement.php'){echo ' active';}?>">
+        <a class="nav-link" href="../admin/announcement.php">
+          <i class="fa fa-bullhorn"></i>
+          <span>Announcement</span></a>
+      </li>
+      <?php } ?>
+      <!-- Divider -->
+      <hr class="sidebar-divider">
+
+      <!-- Heading -->
+     <!--<div class="sidebar-heading">
+        List
+     </div>-->
+
+      <!-- Nav Item - Pages Collapse Menu -->
+      <?php
+      date_default_timezone_set("Asia/Manila"); 
+
+      $date_t = date("Y-m-d");
+
+      $select_u_type=$conn->prepare("SELECT * FROM users");
+      $select_u_type->execute();
+      $row_u_type=$select_u_type->fetch(PDO::FETCH_ASSOC);
+
+      $select_onduty=$conn->prepare("SELECT a.userid,a.firstname,a.lastname,b.date_in,b.time_in,b.date_out,b.time_out,b.tasks,b.time_rendered,a.level FROM users a INNER JOIN attendance b ON a.userid = b.userid
+      WHERE b.date_in IS NOT NULL AND b.date_in = :dndate AND b.date_out IS NULL");
+      $select_onduty->execute(array(':dndate' => $date_t));
+
+
+      $count_duty=$conn->prepare("SELECT COUNT(b.attendanceid) as ocount FROM users a INNER JOIN attendance b ON a.userid = b.userid
+      WHERE b.date_in IS NOT NULL AND b.date_in = :dndate AND b.date_out IS NULL");
+      $count_duty->execute(array(':dndate' => $date_t));
+      $row_count=$count_duty->fetch(PDO::FETCH_ASSOC);
+      $count = $row_count['ocount'];
+
+      ?>
+
+      <li class="nav-item">
+        <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+          <i class="fas fa-user"></i>
+          <span>On Duty (<?php echo $count; ?>)</span>
+          </a>
+        
+        <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionSidebar">
+          <div class="bg-white py-2 collapse-inner rounded">
+           <!-- <h6 class="collapse-header">Custom Components:</h6>-->
+            <?php
+            if($select_onduty->rowCount() == 0)
+            {
+              ?>
+            <a class="collapse-item">No Support On Duty</a>
+              <?php
+            }
+            else
+            {
+            while($row_onduty=$select_onduty->fetch(PDO::FETCH_ASSOC))
+            {
+             
+            ?>
+
+            <a class="collapse-item" style="font-size:11px"><?php echo $row_onduty['firstname']." ".$row_onduty['lastname']." "."(".$row_onduty['level'].")" ; ?></a>
+           
+            <?php
+            }
+            }
+            ?>
+      
+              
+          </div>
+        </div>
+      </li>
+
+
+
+      <!-- Divider -->
+      <hr class="sidebar-divider d-none d-md-block"> 
+
+      <!-- Sidebar Toggler (Sidebar) -->
+      <div class="text-center d-none d-md-inline">
+        <button class="rounded-circle border-0" id="sidebarToggle"></button>
+      </div>
+
+
+      <!-- Divider -->
+      <hr class="sidebar-divider">
+      <div class=container style="color: white">
+     
+   </div>
+    </ul>
+
+        <div id="content-wrapper" class="d-flex flex-column">
+
+      <!-- Main Content -->
+      <div id="content">
+
+        <!-- Topbar -->
+        <nav class="navbar navbar-expand navbar-light bg-white topbar mb-4 static-top shadow">
+  
+
+          <!-- Back to Attendance HUB -->
+    
+          <!-- Back to Attendance HUB -->
+
+          
+          <!-- Sidebar Toggle (Topbar) -->
+          <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+            <i class="fa fa-bars"></i>
+          </button>
+        <?php if($row['level'] != "admin" AND $row['level'] != "payroll")
+        { ?>
+         <a href="../" class="btn btn-primary">
+      <i class="fa fa-arrow-circle-left"></i> AttendanceHub</a>
+        <?php
+        }
+        ?>
+          <!-- Topbar Search -->
+
+
+
+          <!-- Topbar Navbar -->
+          <ul class="navbar-nav ml-auto">
+
+            <!-- Nav Item - Search Dropdown (Visible Only XS) -->
+
+
+            <!-- Nav Item - Alerts -->
+ 
+            <!-- Nav Item - Messages -->
+          
+
+
+            <div class="topbar-divider d-none d-sm-block"></div>
+
+            <!-- Nav Item - User Information -->
+            <li class="nav-item dropdown no-arrow">
+              <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="mr-2 d-none d-lg-inline text-gray-600 small"><?php echo $row['firstname']," ",$row['lastname']; ?></span>
+                <img class="img-profile rounded-circle" src="https://source.unsplash.com/QAB-WJcbgJk/60x60">
+              </a>
+              <!-- Dropdown - User Information -->
+              <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+              <!--  <a class="dropdown-item" href="profile.php">
+                  <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Profile
+                </a>-->
+       
+
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                  <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                  Logout
+                </a>
+              </div>
+            </li>
+
+          </ul>
+
+        </nav>
